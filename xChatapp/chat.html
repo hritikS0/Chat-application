@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+    <link rel="stylesheet" href="/xChatapp/styles/chat.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">Chat Room</div>
+        <div id="messages"></div>
+        <div id="sendMsg">
+            <input type="text" id="msgTxt" placeholder="Type your message">
+            <button id="msgBtn" onclick="sendMsg()">Send</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { getDatabase, ref, push, set, remove, onChildAdded, onChildRemoved } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
+    
+        // 🔥 Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAgI4VQ0yUlcJOm_X7OHkeQ9L3BVlW1wyc",
+            authDomain: "app-application-f73b9.firebaseapp.com",
+            databaseURL: "https://app-application-f73b9-default-rtdb.firebaseio.com",
+            projectId: "app-application-f73b9",
+            storageBucket: "app-application-f73b9.appspot.com",
+            messagingSenderId: "127997162999",
+            appId: "1:127997162999:web:69da92f7a4c8b02631aaf2",
+            measurementId: "G-VEWJTWJ710"
+        };
+    
+        // 🔹 Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+    
+        // 🔹 Get Room ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const chatRoom = urlParams.get("room");
+        if (!chatRoom) {
+            alert("No chat room selected! Redirecting...");
+            window.location.href = "chatRooms.html";
+        }
+    
+        // 🔹 Get Messages Reference for the Selected Room
+        const messagesRef = ref(db, `messages/${chatRoom}`);
+    
+        // 🔹 Retrieve Username from Session
+        const sender = sessionStorage.getItem("sender");
+        if (!sender) {
+            window.location.href = "username.html"; // Redirect to username selection if not set
+        }
+    
+        // 🔹 Send Message
+        window.sendMsg = function sendMsg() {
+            const msgTxt = document.getElementById("msgTxt").value.trim();
+            if (msgTxt === "") return;
+    
+            const newMsgRef = push(messagesRef); // Generate unique key for each message
+    
+            set(newMsgRef, {
+                msg: msgTxt,
+                sender: sender,
+                timestamp: new Date().getTime()
+            });
+    
+            document.getElementById("msgTxt").value = ""; // Clear input
+        };
+    
+        // 🔹 Receive Messages
+        onChildAdded(messagesRef, (data) => {
+            const message = data.val();
+            const messageElement = document.createElement("div");
+            messageElement.id = data.key; // Assign message ID
+            messageElement.classList.add("outer");
+    
+            const innerElement = document.createElement("div");
+            innerElement.classList.add(message.sender === sender ? "me" : "notMe");
+            innerElement.textContent = `${message.sender}: ${message.msg}`;
+    
+            // Show delete button only for sender
+            if (message.sender === sender) {
+                const deleteButton = document.createElement("button");
+                deleteButton.classList.add("dltMsg");
+                deleteButton.innerHTML = '<img src="/assests/photos/trash-9283939_1280.png" alt="Delete" width="14" height="15px">';
+                deleteButton.onclick = () => dltMsg(data.key); // Delete message on click
+                innerElement.appendChild(deleteButton);
+            }
+    
+            messageElement.appendChild(innerElement);
+            document.getElementById("messages").appendChild(messageElement);
+            document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight; // Auto-scroll
+        });
+    
+        // 🔹 Delete Message
+        window.dltMsg = function dltMsg(key) {
+            remove(ref(db, `messages/${chatRoom}/${key}`)).catch((error) => {
+                console.error("Error deleting message: ", error);
+            });
+        };
+    
+        // 🔹 Handle Deleted Messages
+        onChildRemoved(messagesRef, (data) => {
+            const msgBox = document.getElementById(data.key);
+            if (msgBox) {
+                msgBox.remove();
+            }
+        });
+    </script>
+    
+</body>
+</html>
