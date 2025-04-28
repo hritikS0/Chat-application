@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App - Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        .container {
+            position: relative;
+            z-index: 1;
+        }
+        .bg-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://www.transparenttextures.com/patterns/stardust.png');
+            opacity: 0.05;
+            animation: moveParticles 20s infinite linear;
+        }
+        @keyframes moveParticles {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-50px, -50px); }
+        }
+        .login-box {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .login-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        input {
+            transition: all 0.3s ease;
+        }
+        input:focus {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #4dabf7;
+            box-shadow: 0 0 10px rgba(77, 171, 247, 0.5);
+        }
+        button {
+            position: relative;
+            overflow: hidden;
+        }
+        button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.4s ease, height 0.4s ease;
+        }
+        button:hover::after {
+            width: 200px;
+            height: 200px;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center relative">
+    <div class="bg-particles"></div>
+    <div class="container login-box p-8 rounded-xl w-full max-w-md">
+        <h2 class="text-4xl font-extrabold text-white text-center mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-500 animate-pulse">
+            Welcome Back!
+        </h2>
+        <div class="space-y-6">
+            <input 
+                id="username" 
+                type="text" 
+                placeholder="Enter your username" 
+                class="w-full p-4 bg-gray-900 bg-opacity-50 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
+            >
+            <input 
+                id="password" 
+                type="password" 
+                placeholder="Enter your password" 
+                class="w-full p-4 bg-gray-900 bg-opacity-50 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
+            >
+            <button 
+                onclick="login()" 
+                class="w-full p-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition duration-300 font-semibold text-lg"
+            >
+                Login Now
+            </button>
+        </div>
+        <p class="mt-6 text-center text-gray-300">
+            Don’t have an account? 
+            <a href="/index.html" class="text-blue-400 hover:text-blue-500 font-medium transition duration-300">Sign up here</a>
+        </p>
+    </div>
+    <script type="module" src="/js/login.js"></script>
+</body>
+</html>

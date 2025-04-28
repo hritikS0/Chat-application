@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choose Your Avatar</title>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo="> <!-- Silences favicon 404 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 90%; /* Fluid width */
+            max-width: 28rem; /* Default max-width (448px) */
+            margin: 0 auto;
+        }
+        .bg-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://www.transparenttextures.com/patterns/stardust.png');
+            opacity: 0.05;
+            animation: moveParticles 20s infinite linear;
+        }
+        @keyframes moveParticles {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-50px, -50px); }
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 2rem;
+            box-sizing: border-box;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .glass:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        .avatar-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            height: 20rem;
+            overflow-y: auto;
+        }
+        .avatar-option {
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .avatar-option img {
+            width: 100%;
+            height: auto;
+            border-radius: 9999px;
+            transition: transform 0.3s ease;
+        }
+        .avatar-option:hover img {
+            transform: scale(1.1);
+        }
+        .avatar-option.selected {
+            border: 2px solid #4dabf7;
+        }
+        .avatar-option.selected img {
+            box-shadow: 0 0 10px rgba(77, 171, 247, 0.5);
+        }
+        button {
+            position: relative;
+            overflow: hidden;
+        }
+        button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.4s ease, height 0.4s ease;
+        }
+        button:hover::after {
+            width: 200px;
+            height: 200px;
+        }
+        .avatar-list::-webkit-scrollbar {
+            width: 8px;
+        }
+        .avatar-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        .avatar-list::-webkit-scrollbar-thumb {
+            background: rgba(77, 171, 247, 0.5);
+            border-radius: 4px;
+        }
+        .avatar-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(77, 171, 247, 0.8);
+        }
+        /* Adjust container width at 446px and below */
+        @media (max-width: 446px) {
+            .container {
+                max-width: 24rem; /* Reduced max-width (384px) */
+            }
+            .avatar-list {
+                grid-template-columns: repeat(auto-fit, minmax(3.5rem, 1fr)); /* Smaller avatars */
+                height: 18rem; /* Slightly smaller height */
+                gap: 0.75rem; /* Reduced gap */
+            }
+            .glass {
+                padding: 1.25rem; /* Slightly smaller padding */
+            }
+            h2 {
+                font-size: 1.5rem; /* Smaller heading */
+            }
+            button {
+                padding: 0.75rem 1rem;
+                font-size: 1rem; /* Smaller button text */
+            }
+        }
+        /* Existing mobile adjustments */
+        @media (max-width: 640px) {
+            .glass {
+                padding: 1.5rem;
+            }
+            h2 {
+                font-size: 1.75rem;
+            }
+            .avatar-list {
+                grid-template-columns: repeat(auto-fit, minmax(3.5rem, 1fr));
+                height: 16rem;
+                gap: 0.75rem;
+            }
+            button {
+                padding: 0.75rem 1rem;
+                font-size: 1rem;
+            }
+        }
+        @media (max-width: 400px) {
+            .avatar-list {
+                grid-template-columns: repeat(auto-fit, minmax(3rem, 1fr));
+            }
+        }
+    </style>
+</head>
+<body class="text-white">
+    <div class="bg-particles"></div>
+    <div class="container glass text-center">
+        <h2 class="text-3xl font-extrabold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-500 animate-pulse">
+            Pick Your Avatar
+        </h2>
+        <div id="avatarList" class="avatar-list">
+            <!-- Avatars will be populated here -->
+        </div>
+        <button onclick="saveAvatar()" class="w-full p-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition duration-300 font-semibold text-lg">
+            Save & Continue
+        </button>
+    </div>
+
+    <script type="module" src="/js/profile.js"></script>
+</body>
+</html>

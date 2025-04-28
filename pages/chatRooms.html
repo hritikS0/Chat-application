@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chats - Chat App</title>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/styles/chatroom.css">
+</head>
+
+<body class="theme-dark">
+    <header class="header-dark shadow-md flex items-center justify-between fixed top-0 left-0 right-0 z-10">
+        <h1 class="text-2xl font-semibold text-white">Chat App</h1>
+        <div class="flex items-center gap-3">
+            <select id="themeSelector" class="bg-gray-700 text-white p-2 rounded" onchange="changeTheme()">
+                <option value="theme-dark">Dark</option>
+                <option value="theme-light">Light</option>
+                <option value="theme-ocean">Ocean</option>
+                <option value="theme-forest">Forest</option>
+                <option value="theme-sunset">Sunset</option>
+            </select>
+            <div class="avatar-container flex items-center gap-2" onclick="goToProfile()">
+                <img id="userAvatar" src="https://api.dicebear.com/9.x/adventurer-neutral/svg?seed=default"
+                    class="w-10 h-10 rounded-full" alt="User Avatar">
+                <span id="userName" class="text-white text-base"></span>
+            </div>
+            <button onclick="logOut()" class="text-red-500 text-sm hover:text-red-400 transition duration-300">
+                Log Out
+            </button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="grid-container">
+            <div class="chat-section">
+                <div class="flex-1 p-5">
+                    <h2 class="text-lg font-semibold mb-4">Chats</h2>
+                    <div id="conversationList" class="scroll-container"></div>
+                </div>
+                <div id="chatPanel" class="chat-panel">
+                    <div class="p-4 border-b border-gray-700 flex justify-between items-center">
+                        <h3 id="chatPartner" class="text-lg font-semibold"></h3>
+                        <div class="flex gap-2">
+                            <button id="muteButton" onclick="toggleSoundMute()" class="p-2 rounded"></button>
+                            <button onclick="closeChat()" class="bg-gray-500 text-white p-2 rounded">Close</button>
+                        </div>
+                    </div>
+                    <div id="messages" class="scroll-container"></div>
+                    <div class="input-area">
+                        <input id="messageInput" type="text" placeholder="Type a message..." class="input-modern"
+                            onkeypress="if(event.key === 'Enter') sendMessage()">
+                        <button onclick="toggleEmojiPicker()" class="btn-emoji text-white">😊</button>
+                        <button onclick="toggleGifPicker()" class="btn-emoji text-white">🎥</button>
+                        <div id="emojiPicker" class="emoji-picker"></div>
+                        <div id="gifPicker" class="emoji-picker">
+                            <input id="gifSearch" type="text" placeholder="Search GIFs..."
+                                onkeypress="if(event.key === 'Enter') searchGifs()">
+                            <div id="gifResults" class="gif-grid"></div>
+                        </div>
+                        <button onclick="sendMessage()" class="whatsapp-green text-white btn-send">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-800 p-5 rounded-lg shadow-md">
+                <h2 class="text-lg font-semibold mb-3">Online Contacts</h2>
+                <p class="text-gray-400 text-base mb-4">Tap to chat</p>
+                <div id="onlineUsers" class="scroll-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+        import { getDatabase, ref, get, remove } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAgI4VQ0yUlcJOm_X7OHkeQ9L3BVlW1wyc",
+            authDomain: "app-application-f73b9.firebaseapp.com",
+            databaseURL: "https://app-application-f73b9-default-rtdb.firebaseio.com",
+            projectId: "app-application-f73b9",
+            storageBucket: "app-application-f73b9.appspot.com",
+            messagingSenderId: "127997162999",
+            appId: "1:127997162999:web:69da92f7a4c8b02631aaf2",
+            measurementId: "G-VEWJTWJ710"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        function getCurrentUser() {
+            return sessionStorage.getItem("sender");
+        }
+
+        window.goToProfile = function () {
+            window.location.href = "/pages/profilesetup.html";
+        };
+
+        window.logOut = async function () {
+            const username = getCurrentUser();
+            if (username) {
+                try {
+                    await remove(ref(db, `onlineUsers/${username}`));
+                    console.log(`Removed ${username} from onlineUsers on logout.`);
+                } catch (error) {
+                    console.error("Error removing online status:", error);
+                }
+            }
+            try {
+                await signOut(auth);
+                sessionStorage.clear();
+                window.location.href = "/pages/login.html";
+            } catch (error) {
+                console.error("Error logging out:", error);
+                alert("Failed to log out: " + error.message);
+            }
+        };
+
+        window.changeTheme = function () {
+            const theme = document.getElementById('themeSelector').value;
+            document.body.className = theme;
+            localStorage.setItem('selectedTheme', theme);
+        };
+
+        window.onload = function () {
+            const username = getCurrentUser();
+            if (!username) {
+                console.log("No username found in sessionStorage. Redirecting to login.");
+                window.location.href = "/pages/login.html";
+                return;
+            }
+
+            document.getElementById('userName').textContent = username;
+
+            const savedTheme = localStorage.getItem('selectedTheme') || 'theme-dark';
+            document.body.className = savedTheme;
+            document.getElementById('themeSelector').value = savedTheme;
+
+            onAuthStateChanged(auth, (user) => {
+                if (!user) {
+                    console.log("User is not authenticated. Redirecting to login.");
+                    window.location.href = "/pages/login.html";
+                    return;
+                }
+
+                console.log("User is authenticated. UID:", user.uid);
+
+                const avatarRef = ref(db, `onlineUsers/${username}/avatar`);
+                get(avatarRef).then((snapshot) => {
+                    const avatarUrl = snapshot.val() || "https://api.dicebear.com/9.x/adventurer-neutral/svg?seed=default";
+                    document.getElementById('userAvatar').src = avatarUrl;
+                    console.log(`Loaded avatar for ${username}: ${avatarUrl}`);
+                }).catch((error) => {
+                    console.error("Error loading user avatar:", error);
+                    document.getElementById('userAvatar').src = "https://api.dicebear.com/9.x/adventurer-neutral/svg?seed=default";
+                });
+            });
+        };
+    </script>
+
+    <script type="module" src="/js/chatRoom.js"></script>
+    <script>
+        const emojis = ["😀", "😃", "😄", "😁","😆", "😊", "🙂", "😇", "🥰", "😎",'💘', '💝', '💖', '💗', '💓', '💞', '💕', '💟', '❣️', '💔', '❤️', '🧡', '💛', '💚', '💙', '💜', '🤎', '🖤', '🤍', '❤️‍', '🔥', '❤️‍', '🩹', '💯', '♨️', '💢', '💬', '👁️‍🗨️', '🗨️', '🗯️', '💭', '💤', '🌐', '♠️', '♥️', '♦️', '♣️', '🃏', '🀄️', '🎴', '🎭️', '🔇', '🔈️', '🔉', '🔊', '🔔', '🔕', '🎼', '🎵', '🎶', '💹', '🏧', '🚮', '🚰', '♿️', '🚹️', '🚺️', '🚻', '🚼️', '🚾', '🛂', '🛃', '🛄', '🛅', '⚠️', '🚸', '⛔️', '🚫', '🚳', '🚭️', '🚯', '🚱', '🚷', '📵', '🔞', '☢️', '☣️', '⬆️', '↗️', '➡️', '↘️', '⬇️', '↙️', '⬅️', '↖️', '↕️', '↔️', '↩️', '↪️', '⤴️', '⤵️', '🔃', '🔄', '🔙', '🔚', '🔛', '🔜', '🔝', '🛐', '⚛️', '🕉️', '✡️', '☸️', '☯️', '✝️', '☦️', '☪️', '☮️', '🕎', '🔯', '♈️', '♉️', '♊️', '♋️', '♌️', '♍️', '♎️', '♏️', '♐️', '♑️', '♒️', '♓️', '⛎', '🔀', '🔁', '🔂', '▶️', '⏩️', '⏭️', '⏯️', '◀️', '⏪️', '⏮️', '🔼', '⏫', '🔽', '⏬', '⏸️', '⏹️', '⏺️', '⏏️', '🎦', '🔅', '🔆', '📶', '📳', '📴', '♀️', '♂️', '⚧', '✖️', '➕', '➖', '➗', '♾️', '‼️', '⁉️', '❓️', '❔', '❕', '❗️', '〰️', '💱', '💲', '⚕️', '♻️', '⚜️', '🔱', '📛', '🔰', '⭕️', '✅', '☑️', '✔️', '❌', '❎', '➰', '➿', '〽️', '✳️', '✴️', '❇️', '©️', '®️', '™️', '#️⃣', '*️⃣', '0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟', '🔠', '🔡', '🔢', '🔣', '🔤', '🅰️', '🆎', '🅱️', '🆑', '🆒', '🆓', 'ℹ️', '🆔', 'Ⓜ️', '🆕', '🆖', '🅾️', '🆗', '🅿️', '🆘', '🆙', '🆚', '🈁', '🈂️', '🈷️', '🈶', '🈯️', '🉐', '🈹', '🈚️', '🈲', '🉑', '🈸', '🈴', '🈳', '㊗️', '㊙️', '🈺', '🈵', '🔴', '🟠', '🟡', '🟢', '🔵', '🟣', '🟤', '⚫️', '⚪️', '🟥', '🟧', '🟨', '🟩', '🟦', '🟪', '🟫', '⬛️', '⬜️', '◼️', '◻️', '◾️', '◽️', '▪️', '▫️', '🔶', '🔷', '🔸', '🔹', '🔺', '🔻', '💠', '🔘', '🔳', '🔲'];
+
+        const emojiPicker = document.getElementById('emojiPicker');
+        emojis.forEach(emoji => {
+            const emojiSpan = document.createElement('span');
+            emojiSpan.className = 'emoji';
+            emojiSpan.textContent = emoji;
+            emojiSpan.onclick = () => insertEmoji(emoji);
+            emojiPicker.appendChild(emojiSpan);
+        });
+
+        window.toggleEmojiPicker = function () {
+            
+            console.log("Toggling emoji picker");
+            const picker = document.getElementById('emojiPicker');
+            picker.classList.toggle('active');
+            document.getElementById('gifPicker').classList.remove('active');
+        };
+
+        window.insertEmoji = function (emoji) {
+            const messageInput = document.getElementById('messageInput');
+            messageInput.value += emoji;
+            messageInput.focus();
+            document.getElementById('emojiPicker').classList.remove('active');
+        };
+
+        window.toggleGifPicker = function () {
+            console.log("Toggling GIF picker");
+            const gifPicker = document.getElementById('gifPicker');
+            if (!gifPicker) {
+                console.error("GIF picker element not found");
+                return;
+            }
+            gifPicker.classList.toggle('active');
+            console.log("GIF picker active:", gifPicker.classList.contains('active'));
+            document.getElementById('emojiPicker').classList.remove('active');
+        };
+
+        window.searchGifs = async function () {
+            console.log("Searching GIFs");
+            const query = document.getElementById('gifSearch').value.trim();
+            if (!query) return;
+
+            const apiKey = 'Wb3E3NW23Yh0T1ivEN21W8YxbWhdZITi';
+            const url = `https://api.giphy.com/v1/gifs/search?api_key=${apiKey}&q=${encodeURIComponent(query)}&limit=10&offset=0&rating=g&lang=en`;
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                const data = await response.json();
+                if (data.meta.status !== 200) throw new Error(`API error! Status: ${data.meta.status}, Message: ${data.meta.msg}`);
+                displayGifs(data.data);
+            } catch (error) {
+                console.error('Error fetching GIFs:', error);
+                document.getElementById('gifResults').innerHTML = '<p class="text-red-400">Failed to load GIFs</p>';
+            }
+        };
+
+        function displayGifs(gifs) {
+            console.log("Displaying GIFs:", gifs.length);
+            const gifResults = document.getElementById('gifResults');
+            gifResults.innerHTML = '';
+            if (gifs.length === 0) {
+                gifResults.innerHTML = '<p class="text-gray-400 text-center">No GIFs found</p>';
+                return;
+            }
+            gifs.forEach(gif => {
+                const gifDiv = document.createElement('div');
+                gifDiv.className = 'gif-item';
+                gifDiv.innerHTML = `<img src="${gif.images.fixed_height.url}" alt="GIF" />`;
+                gifDiv.onclick = () => sendGif(gif.images.fixed_height.url);
+                gifResults.appendChild(gifDiv);
+            });
+        }
+
+        window.sendGif = function (gifUrl) {
+            console.log("Sending GIF:", gifUrl);
+            window.sendGifMessage(gifUrl);
+            document.getElementById('gifPicker').classList.remove('active');
+        };
+
+        document.addEventListener('click', (event) => {
+            const emojiPicker = document.getElementById('emojiPicker');
+            const gifPicker = document.getElementById('gifPicker');
+            if (!emojiPicker.contains(event.target) && !gifPicker.contains(event.target) && !event.target.closest('.btn-emoji')) {
+                emojiPicker.classList.remove('active');
+                gifPicker.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+
+</html>
